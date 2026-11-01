@@ -1,0 +1,22 @@
+import {person,mesh} from './models.js';
+// Separate inbound/outbound lanes keep the doorway clear.
+const NODES={entry:[-.46,3.05],exit:[.46,3.05],inLane:[-.46,1.8],outLane:[.46,1.8],cross:[0,1.15],left:[-2.55,1.15],right:[2.55,1.15],tarot:[-2.55,.2],runes:[2.55,.2],rest:[0,-1.3]};
+const GRAPH={entry:['inLane'],inLane:['entry','cross'],exit:['outLane'],outLane:['exit','cross'],cross:['inLane','outLane','left','right','rest'],left:['cross','tarot'],right:['cross','runes'],tarot:['left'],runes:['right'],rest:['cross']};
+for(let i=0;i<5;i++){const x=[-3.55,-1.55,3.55,1.65,-.95][i];NODES['wait'+i]=[x,1.35];GRAPH['wait'+i]=['cross'];GRAPH.cross.push('wait'+i);}
+function route(from,to){const q=[[from]],seen=new Set([from]);while(q.length){const path=q.shift(),last=path.at(-1);if(last===to)return path.slice(1);for(const n of GRAPH[last])if(!seen.has(n)){seen.add(n);q.push([...path,n]);}}return [];}
+export class NPCManager{
+ constructor(scene){this.seats={tarot:null,runes:null};this.people=[];const colors=[0xc7958d,0xa3b6c0,0xc6ae7c,0x9fa984,0xbaa1b8];for(let i=0;i<5;i++){const p=person(colors[i],[0x6f4c37,0xd6b47b,0x776159][i%3]);p.group.scale.setScalar(.76);const node=['entry','left','right','rest','wait4'][i];p.group.position.set(NODES[node][0],.34,NODES[node][1]);if(i===0)mesh(p.head,'sphere',0xb58b83,[0,.28,-.02],[.36,.12,.32]);if(i===1)mesh(p.group,'box',0x8d7564,[0,.6,-.22],[.36,.37,.15]);if(i===3)for(const x of [-.105,.105])mesh(p.head,'torus',0x72685e,[x,.015,.328],[.071,.071,.071]);if(i===4)mesh(p.group,'box',0x7f6c8e,[0,.55,.25],[.32,.3,.07]);scene.add(p.group);p.group.visible=i!==0;this.people.push({...p,node,state:i===0?'OUTSIDE':'IDLE',timer:1+i*2.6,path:[],destination:null,index:i,visits:0});}}
+ go(p,node,state='WALKING'){p.path=route(p.node,node);p.destination=node;p.state=state;}
+ outside(p){p.group.visible=false;p.state='OUTSIDE';p.path=[];p.destination=null;p.timer=5+Math.random()*8;p.visits++;for(const limb of [...p.legs,...p.arms])limb.rotation.x=0;}
+ choose(p){const choices=['tarot','runes'].filter(k=>this.seats[k]===null);if(choices.length){const dest=choices[Math.floor(Math.random()*choices.length)];this.seats[dest]=p;this.go(p,dest);}else if(p.state==='RESTING'){this.go(p,'exit','LEAVING');}else if(p.node==='cross'){this.go(p,'wait'+p.index);}else if(p.state==='QUEUING'&&p.queueTime>14){this.go(p,'exit','LEAVING');}else{p.state='QUEUING';p.timer=2+Math.random()*2;}}
+ update(dt,t,simple){if(simple)return;for(const p of this.people){
+ if(p.state==='OUTSIDE'){p.timer-=dt;if(p.timer>0)continue;const [x,z]=NODES.entry;const occupied=this.people.some(o=>o!==p&&o.group.visible&&Math.hypot(o.group.position.x-x,o.group.position.z-z)<.75);if(occupied){p.timer=.6;continue;}p.node='entry';p.group.position.set(x,.34,z);p.group.visible=true;p.queueTime=0;this.go(p,'cross');continue;}
+ if(p.state==='QUEUING')p.queueTime=(p.queueTime||0)+dt;
+ if(p.path.length){const n=p.path[0],[x,z]=NODES[n];const dx=x-p.group.position.x,dz=z-p.group.position.z,dist=Math.hypot(dx,dz);const step=Math.min(dist,dt*.58);let vx=dx/(dist||1),vz=dz/(dist||1);
+ // Soft sidestepping instead of index-based hard stops (which deadlocked at the door).
+ let sx=0,sz=0;for(const o of this.people){if(o===p||!o.group.visible)continue;const ox=o.group.position.x-p.group.position.x,oz=o.group.position.z-p.group.position.z,d=Math.hypot(ox,oz);if(d<.56&&d>.001&&ox*vx+oz*vz>0){const side=(vx*oz-vz*ox)>=0?-1:1;const amount=(.56-d)/.56*.7;sx+=-vz*side*amount;sz+=vx*side*amount;}}
+ p.group.position.x+=vx*step+sx*step;p.group.position.z+=vz*step+sz*step;p.group.rotation.y=Math.atan2(vx,vz);p.group.position.y=.34+Math.abs(Math.sin(t*6+p.index))*.035;for(let i=0;i<2;i++){p.legs[i].rotation.x=Math.sin(t*6+i*Math.PI)*.35;p.arms[i].rotation.x=-Math.sin(t*6+i*Math.PI)*.25;}
+ if(dist<.035){p.group.position.x=x;p.group.position.z=z;p.node=n;p.path.shift();if(!p.path.length){p.group.position.y=.34;for(const limb of [...p.legs,...p.arms])limb.rotation.x=0;if(n==='exit'){this.outside(p);continue;}if(n==='cross'){this.choose(p);continue;}p.state=n==='rest'?'RESTING':['tarot','runes'].includes(n)?'CONSULTING':'QUEUING';p.timer=p.state==='CONSULTING'?8:2+Math.random()*3;if(p.state==='CONSULTING')p.group.rotation.y=Math.PI;}}continue;}
+ p.timer-=dt;if(p.timer>0)continue;if(p.state==='CONSULTING'){this.seats[p.node]=null;this.go(p,'exit','LEAVING');}else this.choose(p);
+ }}
+}
