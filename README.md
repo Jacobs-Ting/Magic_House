@@ -57,3 +57,9 @@ npm exec --yes --package=esbuild@0.25.12 -- esbuild js/main.js --bundle --format
 ```
 
 執行打包需要 Node.js 與 npm；一般瀏覽及修改 `js/fortune-links.js` 不需要。
+
+## 妮娜的占星小屋
+
+中央新增淡黃色的妮娜 Nina、星盤與旋轉星環球，可點選模型或「妮娜的占星小屋」卡片開啟對話。顧客也會到第三個攤位占星。原本中央休息桌移至左前側，保留中央走道。
+
+占星網址請填入 `js/fortune-links.js` 的 `astrology` 欄位；目前留空，按進入按鈕會顯示「魔法通道準備中，敬請期待！」。塔羅與符文網址維持原設定，音樂選單保留。
