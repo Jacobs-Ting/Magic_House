@@ -5,9 +5,12 @@ export class AmbientEvents{
   this.bubble=document.querySelector('#bubble');this.anchor=new Vector3();
   this.next=22;this.until=0;this.index=0;this.speaker=null;
   this.lines=[
-   {speaker:'tarot',text:'露娜：芙蕾雅～星星說今天會有好運耶！ ✨'},
+   {speaker:'tarot',text:'露娜：芙蕾雅～我抽到太陽牌，塔羅說今天充滿希望耶！ ✨'},
    {speaker:'runes',text:'芙蕾雅：嗯，符文說要先找到妳的魔法書。 🌿'},
-   {speaker:'tarot',text:'露娜：咦？！原來就在我的帽子旁邊！'}
+   {speaker:'tarot',text:'露娜：找到了！魔法書裡記著這張塔羅牌的牌義呢！'},
+   {speaker:'astrology',text:'妮娜：今晚的星象，適合慢慢尋找心裡的答案呢！🌟'},
+   {speaker:'astrology',text:'妮娜：占卜顯示今夜的星星好美'},
+   {speaker:'astrology',text:'妮娜：我們躺在草地上看星星'}
   ];
  }
  positionBubble(){

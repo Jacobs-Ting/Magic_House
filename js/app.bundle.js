@@ -20579,9 +20579,10 @@ void main() {
           str.rotation.z = -Math.atan2(0.545, nextY - y);
         }
       }
-      for (let [id, x, c] of [["tarot", -2.55, 11903180], ["runes", 2.55, 10268553]]) {
+      for (let [id, x, c] of [["tarot", -3, 11903180], ["astrology", 0, 15720611], ["runes", 3, 10268553]]) {
         let booth = new Group();
         booth.position.x = x;
+        booth.scale.set(0.82, 1, 1);
         booth.userData.booth = id;
         s.add(booth);
         this.targets.push(booth);
@@ -20597,7 +20598,7 @@ void main() {
           mesh(booth, "cylinder", 11832685, [0, 0.6, z], [0.38, 0.13, 0.36]);
           for (let dx of [-0.22, 0.22]) mesh(booth, "cylinder", 10518629, [dx, 0.44, z], [0.035, 0.4, 0.035]);
         }
-        label(booth, id === "tarot" ? "\u263E  LUNA" : "\u16C9  FREYA", [0, 2.98, -3.36], id === "tarot" ? "#87659d" : "#647d54", 0.36);
+        label(booth, id === "tarot" ? "\u263E  LUNA" : id === "astrology" ? "\u2609  NINA" : "\u16C9  FREYA", [0, 2.98, -3.36], id === "tarot" ? "#87659d" : id === "astrology" ? "#a58537" : "#647d54", 0.36);
         if (id === "tarot") {
           mesh(booth, "cylinder", 12953199, [0.49, 1.46, -1.25], [0.18, 0.15, 0.18]);
           let orb = mesh(booth, "sphere", 14338029, [0.49, 1.75, -1.25], [0.28, 0.28, 0.28]);
@@ -20609,6 +20610,24 @@ void main() {
             mesh(booth, "sphere", 15059337, [-0.65 + i * 0.23, 1.43, -1.08], [0.035, 0.012, 0.045]);
           }
           label(booth, "\u263E", [-0.65, 2.3, -3.36], "#e8c783", 0.65);
+        } else if (id === "astrology") {
+          const chart = mesh(booth, "cylinder", 16313799, [-0.33, 1.4, -1.23], [0.46, 0.025, 0.45]);
+          const wheel = mesh(booth, "torus", 11836249, [-0.33, 1.42, -1.23], [0.39, 0.39, 0.39]);
+          wheel.rotation.x = Math.PI / 2;
+          for (let i = 0; i < 12; i++) {
+            const a = i * Math.PI / 6;
+            mesh(booth, "sphere", 11836249, [-0.33 + Math.cos(a) * 0.32, 1.44, -1.23 + Math.sin(a) * 0.32], [0.025, 0.012, 0.025]);
+          }
+          mesh(booth, "cylinder", 12558693, [0.57, 1.48, -1.4], [0.17, 0.2, 0.17]);
+          this.starGlobe = new Group();
+          this.starGlobe.position.set(0.57, 1.85, -1.4);
+          booth.add(this.starGlobe);
+          mesh(this.starGlobe, "sphere", 16049581, [0, 0, 0], [0.19, 0.19, 0.19]);
+          for (let i = 0; i < 3; i++) {
+            const ring2 = mesh(this.starGlobe, "torus", 13216352, [0, 0, 0], [0.33, 0.33, 0.33]);
+            ring2.rotation.set(i * Math.PI / 3, 0.6 + i * 0.6, 0.4);
+          }
+          label(booth, "\u2727 \u2609 \u2727", [0, 2.35, -3.36], "#bd9e4c", 0.65);
         } else {
           this.runes = [];
           for (let i = 0; i < 4; i++) {
@@ -20640,9 +20659,9 @@ void main() {
         mesh(s, "cylinder", 15916990, [x, 0.28, 2.6], [0.04, 0.3, 0.04]);
         mesh(s, "sphere", 13212320, [x, 0.44, 2.6], [0.24, 0.12, 0.22]);
       }
-      mesh(s, "cylinder", 11636076, [0, 0.62, -2.3], [0.1, 0.6, 0.1]);
-      mesh(s, "cylinder", 14662801, [0, 0.97, -2.3], [0.49, 0.1, 0.49]);
-      for (let x of [-0.85, 0.85]) mesh(s, "cylinder", 12886652, [x, 0.53, -2.3], [0.29, 0.38, 0.29]);
+      mesh(s, "cylinder", 11636076, [-4, 0.62, 2], [0.1, 0.6, 0.1]);
+      mesh(s, "cylinder", 14662801, [-4, 0.97, 2], [0.35, 0.1, 0.35]);
+      mesh(s, "cylinder", 12886652, [-3.45, 0.53, 2], [0.24, 0.38, 0.24]);
       let sign = mesh(s, "box", 13017722, [-3.7, 0.9, 3.05], [1.2, 0.55, 0.08]);
       sign.rotation.y = 0.1;
       mesh(s, "cylinder", 11043938, [-3.7, 0.5, 3.05], [0.045, 0.8, 0.045]);
@@ -20666,7 +20685,10 @@ void main() {
       s.add(this.particles);
     }
     update(t, simple) {
-      if (!simple) this.particles.rotation.y = t * 0.025;
+      if (!simple) {
+        this.particles.rotation.y = t * 0.025;
+        if (this.starGlobe) this.starGlobe.rotation.y = t * 0.22;
+      }
       this.cat.scale.y = 1 + Math.sin(t * 1.5) * 0.025;
     }
   };
@@ -20737,10 +20759,11 @@ void main() {
   };
 
   // js/config.js
-  var FORTUNE_LINKS = globalThis.FORTUNE_LINKS ?? { tarot: "", runes: "" };
+  var FORTUNE_LINKS = globalThis.FORTUNE_LINKS ?? { tarot: "", runes: "", astrology: "" };
   var WITCHES = {
-    tarot: { name: "\u9732\u5A1C Luna", title: "\u9732\u5A1C\u7684\u5854\u7F85\u5C0F\u5C4B", subtitle: "FOLLOW THE STARS", icon: "\u263E", color: 10848966, x: -2.55, welcome: "\u6B61\u8FCE\u4F86\u5230\u9732\u5A1C\u7684\u5854\u7F85\u5C0F\u5C4B\uFF01\u4ECA\u5929\u60F3\u8B93\u661F\u661F\u544A\u8A34\u4F60\u4EC0\u9EBC\u79D8\u5BC6\u5462\uFF1F\u2728", button: "\u9032\u5165\u5854\u7F85\u5360\u535C" },
-    runes: { name: "\u8299\u857E\u96C5 Freya", title: "\u8299\u857E\u96C5\u7684\u7B26\u6587\u5C0F\u5C4B", subtitle: "LISTEN TO THE FOREST", icon: "\u16C9", color: 9018992, x: 2.55, welcome: "\u6B61\u8FCE\u4F86\u5230\u8299\u857E\u96C5\u7684\u7B26\u6587\u5C0F\u5C4B\u3002\u53E4\u8001\u7684\u7B26\u6587\u6B63\u5728\u4F4E\u8A9E\uFF0C\u8981\u4F86\u807D\u807D\u5B83\u5011\u7684\u6545\u4E8B\u55CE\uFF1F\u{1F33F}", button: "\u9032\u5165\u76E7\u6069\u7B26\u6587\u89E3\u8B80" }
+    tarot: { name: "\u9732\u5A1C Luna", title: "\u9732\u5A1C\u7684\u5854\u7F85\u5C0F\u5C4B", subtitle: "EXPLORE THE TAROT", icon: "\u263E", color: 10848966, x: -3, welcome: "\u6B61\u8FCE\u4F86\u5230\u9732\u5A1C\u7684\u5854\u7F85\u5C0F\u5C4B\uFF01\u4ECA\u5929\u60F3\u900F\u904E\u5854\u7F85\u724C\u63A2\u7D22\u4EC0\u9EBC\u5462\uFF1F\u8B93\u724C\u9762\u7684\u6545\u4E8B\u966A\u4F60\u6574\u7406\u5FC3\u4E2D\u7684\u7591\u554F\u5427\uFF01\u2728", button: "\u9032\u5165\u5854\u7F85\u5360\u535C" },
+    runes: { name: "\u8299\u857E\u96C5 Freya", title: "\u8299\u857E\u96C5\u7684\u7B26\u6587\u5C0F\u5C4B", subtitle: "LISTEN TO THE FOREST", icon: "\u16C9", color: 9018992, x: 3, welcome: "\u6B61\u8FCE\u4F86\u5230\u8299\u857E\u96C5\u7684\u7B26\u6587\u5C0F\u5C4B\u3002\u53E4\u8001\u7684\u7B26\u6587\u6B63\u5728\u4F4E\u8A9E\uFF0C\u8981\u4F86\u807D\u807D\u5B83\u5011\u7684\u6545\u4E8B\u55CE\uFF1F\u{1F33F}", button: "\u9032\u5165\u76E7\u6069\u7B26\u6587\u89E3\u8B80" },
+    astrology: { name: "\u59AE\u5A1C Nina", title: "\u59AE\u5A1C\u7684\u5360\u661F\u5C0F\u5C4B", subtitle: "READ THE COSMOS", icon: "\u2609", color: 15390092, x: 0, welcome: "\u6B61\u8FCE\u4F86\u5230\u59AE\u5A1C\u7684\u5360\u661F\u5C0F\u5C4B\uFF01\u661F\u8FB0\u6B63\u5728\u63CF\u7E6A\u5C6C\u65BC\u4F60\u7684\u6545\u4E8B\uFF0C\u4E00\u8D77\u770B\u770B\u5B87\u5B99\u634E\u4F86\u7684\u8A0A\u606F\u5427\uFF01\u{1F31F}", button: "\u9032\u5165\u5360\u661F\u8853" }
   };
 
   // js/witches.js
@@ -20749,12 +20772,12 @@ void main() {
       this.witches = {};
       this.selected = null;
       for (let [id, cfg] of Object.entries(WITCHES)) {
-        let p = person(cfg.color, id === "tarot" ? 12362963 : 10056534, true);
+        let p = person(cfg.color, id === "tarot" ? 12362963 : id === "astrology" ? 13211746 : 10056534, true);
         p.group.position.set(cfg.x, 0.53, -2.28);
         p.group.userData.booth = id;
         scene.add(p.group);
         this.witches[id] = p;
-        mesh(p.group, "box", id === "tarot" ? 7823757 : 7635810, [0, 0.54, 0.41], [0.38, 0.065, 0.27]);
+        mesh(p.group, "box", id === "tarot" ? 7823757 : id === "astrology" ? 13018711 : 7635810, [0, 0.54, 0.41], [0.38, 0.065, 0.27]);
       }
     }
     welcome(id) {
@@ -20764,7 +20787,7 @@ void main() {
     update(t, simple) {
       for (let [id, p] of Object.entries(this.witches)) {
         let wave = this.selected === id && t < this.waveUntil;
-        let phase = t + (id === "tarot" ? 0 : 3);
+        let phase = t + (id === "tarot" ? 0 : id === "astrology" ? 1.5 : 3);
         p.head.rotation.y = simple ? 0 : Math.sin(phase * 0.5) * 0.12;
         p.head.rotation.z = simple ? 0 : Math.sin(phase * 0.8) * 0.035;
         p.arms[1].rotation.z = wave ? -1.5 + Math.sin(t * 10) * 0.25 : Math.sin(phase * 1.4) * 0.1;
@@ -20775,8 +20798,8 @@ void main() {
   };
 
   // js/customers.js
-  var NODES = { entry: [-0.46, 3.05], exit: [0.46, 3.05], inLane: [-0.46, 1.8], outLane: [0.46, 1.8], cross: [0, 1.15], left: [-2.55, 1.15], right: [2.55, 1.15], tarot: [-2.55, 0.2], runes: [2.55, 0.2], rest: [0, -1.3] };
-  var GRAPH = { entry: ["inLane"], inLane: ["entry", "cross"], exit: ["outLane"], outLane: ["exit", "cross"], cross: ["inLane", "outLane", "left", "right", "rest"], left: ["cross", "tarot"], right: ["cross", "runes"], tarot: ["left"], runes: ["right"], rest: ["cross"] };
+  var NODES = { entry: [-0.46, 3.05], exit: [0.46, 3.05], inLane: [-0.46, 1.8], outLane: [0.46, 1.8], cross: [0, 1.15], left: [-3, 1.15], right: [3, 1.15], tarot: [-3, 0.2], runes: [3, 0.2], astrology: [0, 0.2], rest: [-4, 2] };
+  var GRAPH = { entry: ["inLane"], inLane: ["entry", "cross"], exit: ["outLane"], outLane: ["exit", "cross"], cross: ["inLane", "outLane", "left", "right", "astrology"], left: ["cross", "tarot", "rest"], right: ["cross", "runes"], tarot: ["left"], runes: ["right"], astrology: ["cross"], rest: ["left"] };
   for (let i = 0; i < 5; i++) {
     const x = [-3.55, -1.55, 3.55, 1.65, -0.95][i];
     NODES["wait" + i] = [x, 1.35];
@@ -20797,7 +20820,7 @@ void main() {
   }
   var NPCManager = class {
     constructor(scene) {
-      this.seats = { tarot: null, runes: null };
+      this.seats = { tarot: null, runes: null, astrology: null };
       this.people = [];
       const colors = [13079949, 10729152, 13020796, 10463620, 12231096];
       for (let i = 0; i < 5; i++) {
@@ -20829,7 +20852,7 @@ void main() {
       for (const limb of [...p.legs, ...p.arms]) limb.rotation.x = 0;
     }
     choose(p) {
-      const choices = ["tarot", "runes"].filter((k) => this.seats[k] === null);
+      const choices = ["tarot", "runes", "astrology"].filter((k) => this.seats[k] === null);
       if (choices.length) {
         const dest = choices[Math.floor(Math.random() * choices.length)];
         this.seats[dest] = p;
@@ -20905,7 +20928,7 @@ void main() {
                 this.choose(p);
                 continue;
               }
-              p.state = n === "rest" ? "RESTING" : ["tarot", "runes"].includes(n) ? "CONSULTING" : "QUEUING";
+              p.state = n === "rest" ? "RESTING" : ["tarot", "runes", "astrology"].includes(n) ? "CONSULTING" : "QUEUING";
               p.timer = p.state === "CONSULTING" ? 8 : 2 + Math.random() * 3;
               if (p.state === "CONSULTING") p.group.rotation.y = Math.PI;
             }
@@ -20949,7 +20972,7 @@ void main() {
           }
         }
         canvas.style.cursor = obj ? "pointer" : "grab";
-        canvas.title = obj?.userData.booth === "tarot" ? "\u62DC\u8A2A\u9732\u5A1C\u7684\u5854\u7F85\u5C0F\u5C4B" : obj?.userData.booth === "runes" ? "\u62DC\u8A2A\u8299\u857E\u96C5\u7684\u7B26\u6587\u5C0F\u5C4B" : obj ? "\u6478\u6478\u5C0F\u8C93" : "\u62D6\u66F3\u65CB\u8F49\u5834\u666F";
+        canvas.title = obj?.userData.booth ? "\u62DC\u8A2A" + WITCHES[obj.userData.booth].title : obj ? "\u6478\u6478\u5C0F\u8C93" : "\u62D6\u66F3\u65CB\u8F49\u5834\u666F";
       });
       canvas.addEventListener("pointerup", (e) => {
         if (!start || start.id !== e.pointerId || Math.hypot(e.clientX - start.x, e.clientY - start.y) > 7) return;
@@ -21088,6 +21111,7 @@ void main() {
       this.music = new MusicPlayer((message) => this.toast(message));
     }
     open(id) {
+      this.dialog.dataset.booth = id;
       this.selected = id;
       let c = WITCHES[id];
       document.querySelector("#dialog-title").textContent = c.name;
@@ -21120,9 +21144,12 @@ void main() {
       this.index = 0;
       this.speaker = null;
       this.lines = [
-        { speaker: "tarot", text: "\u9732\u5A1C\uFF1A\u8299\u857E\u96C5\uFF5E\u661F\u661F\u8AAA\u4ECA\u5929\u6703\u6709\u597D\u904B\u8036\uFF01 \u2728" },
+        { speaker: "tarot", text: "\u9732\u5A1C\uFF1A\u8299\u857E\u96C5\uFF5E\u6211\u62BD\u5230\u592A\u967D\u724C\uFF0C\u5854\u7F85\u8AAA\u4ECA\u5929\u5145\u6EFF\u5E0C\u671B\u8036\uFF01 \u2728" },
         { speaker: "runes", text: "\u8299\u857E\u96C5\uFF1A\u55EF\uFF0C\u7B26\u6587\u8AAA\u8981\u5148\u627E\u5230\u59B3\u7684\u9B54\u6CD5\u66F8\u3002 \u{1F33F}" },
-        { speaker: "tarot", text: "\u9732\u5A1C\uFF1A\u54A6\uFF1F\uFF01\u539F\u4F86\u5C31\u5728\u6211\u7684\u5E3D\u5B50\u65C1\u908A\uFF01" }
+        { speaker: "tarot", text: "\u9732\u5A1C\uFF1A\u627E\u5230\u4E86\uFF01\u9B54\u6CD5\u66F8\u88E1\u8A18\u8457\u9019\u5F35\u5854\u7F85\u724C\u7684\u724C\u7FA9\u5462\uFF01" },
+        { speaker: "astrology", text: "\u59AE\u5A1C\uFF1A\u4ECA\u665A\u7684\u661F\u8C61\uFF0C\u9069\u5408\u6162\u6162\u5C0B\u627E\u5FC3\u88E1\u7684\u7B54\u6848\u5462\uFF01\u{1F31F}" },
+        { speaker: "astrology", text: "\u59AE\u5A1C\uFF1A\u5360\u535C\u986F\u793A\u4ECA\u591C\u7684\u661F\u661F\u597D\u7F8E" },
+        { speaker: "astrology", text: "\u59AE\u5A1C\uFF1A\u6211\u5011\u8EBA\u5728\u8349\u5730\u4E0A\u770B\u661F\u661F" }
       ];
     }
     positionBubble() {
